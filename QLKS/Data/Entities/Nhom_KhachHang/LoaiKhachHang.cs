@@ -4,7 +4,7 @@ using System.Text;
 
 namespace QLKS.Data.Entities.Nhom_KhachHang
 {
-    internal class LoaiKhachHang
+    public class LoaiKhachHang
     {
         public int LoaiKhachHangId { get; set; }
         public string TenLoaiKhachHang { get; set; } = string.Empty;

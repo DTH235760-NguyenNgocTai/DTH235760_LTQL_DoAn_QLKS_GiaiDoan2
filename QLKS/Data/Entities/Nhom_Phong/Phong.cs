@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
+﻿using QLKS.Data.Entities.Nhom_DatNhanTraPhong;
 using QLKS.Enums;
 
 namespace QLKS.Data.Entities.Nhom_Phong
 {
-    internal class Phong
+    public class Phong
     {
         public int PhongId { get; set; }
         public string SoPhong { get; set; } = string.Empty;
@@ -15,9 +11,10 @@ namespace QLKS.Data.Entities.Nhom_Phong
         public int TangId { get; set; }
         public  TrangThaiPhong TrangThai { get; set; }
         public string? HinhAnh { get; set; }
-        public bool IsDeleted { get; set; } = false; // Thêm cột IsDeleted để đánh dấu xóa mềm, fale có nghĩa là chưa xóa, true có nghĩa là đã xóa
+        public bool IsDeleted { get; set; } = false; // Thêm cột IsDeleted để đánh dấu xóa mềm, fale có nghĩa là chưa xóa
         // Navigation
-        public virtual LoaiPhong? LoaiPhong { get; set; }
-        public virtual Tang? Tang { get; set; }
+        public virtual LoaiPhong LoaiPhong { get; set; } = null!;
+        public virtual Tang Tang { get; set; } = null!;
+        public virtual ICollection<ChiTietDatPhong> ChiTietDatPhongs { get; set; } = new List<ChiTietDatPhong>(); // Một phòng có thể có nhiều chi tiết đặt phòng (nhiều lần đặt khác nhau)
     }
 }
