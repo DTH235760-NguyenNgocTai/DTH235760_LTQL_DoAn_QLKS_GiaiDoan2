@@ -4,10 +4,14 @@
     "\\QLKS",
     "\\QLKS\\Data",
     "\\QLKS\\Data\\Entities",
+    "\\QLKS\\Data\\Entities\\Nhom_Dat-Nhan-TraPhong",
+    "\\QLKS\\Forms",
+    "\\QLKS\\Helpers",
     "\\QLKS\\Services",
     "\\QLKS\\Services\\Nhom_Dat-Nhan-TraPhong",
+    "\\QLKS\\Services\\Nhom_NhanVien",
     "\\QLKS\\UserControls"
   ],
-  "SelectedNode": "\\QLKS\\Helpers",
+  "SelectedNode": "\\QLKS\\UserControls\\ucPhong.Designer.cs",
   "PreviewInSolutionExplorer": false
 }

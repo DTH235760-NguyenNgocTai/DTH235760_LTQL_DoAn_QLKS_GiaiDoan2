@@ -1,2 +1,80 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" />
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Compile Update="Forms\frmDangNhap.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\frmMain.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\frmMain.Modules.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Forms\Modules\frmDashboardModule.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Modules\frmDatPhongEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Modules\frmPhongModule.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Modules\frmTableModule.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Modules\frmThanhToanModule.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Pages\frmChucVuPage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Pages\frmDatPhongPage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Pages\frmDichVuPage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Pages\frmHoaDonPage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Pages\frmKhachHangPage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Pages\frmLoaiKhachPage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Pages\frmLoaiPhongPage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Pages\frmModuleHostBase.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Pages\frmNhanPhongPage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Pages\frmNhanVienPage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Pages\frmSuDungDichVuPage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Pages\frmTaiKhoanPage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Pages\frmTangPage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Pages\frmThanhToanPage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Pages\frmTraPhongPage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\Pages\frmVaiTroPage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="UserControls\ucPhong.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+  </ItemGroup>
+</Project>

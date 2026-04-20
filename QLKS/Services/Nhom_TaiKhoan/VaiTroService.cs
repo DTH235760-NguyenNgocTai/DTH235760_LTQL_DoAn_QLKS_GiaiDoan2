@@ -14,6 +14,7 @@ namespace QLKS.Services.Nhom_TaiKhoan
 
         public List<VaiTro> LayDanhSach()
         {
+            DamBaoVaiTroMacDinh();
             return context.VaiTros
                 .OrderBy(x => x.TenVaiTro)
                 .ToList();
@@ -21,9 +22,40 @@ namespace QLKS.Services.Nhom_TaiKhoan
 
         public List<VaiTro> LayDanhSachChoComboBox()
         {
+            DamBaoVaiTroMacDinh();
             return context.VaiTros
                 .OrderBy(x => x.TenVaiTro)
                 .ToList();
+        }
+
+        public void DamBaoVaiTroMacDinh()
+        {
+            bool coThayDoi = false;
+
+            if (!context.VaiTros.Any(x => x.TenVaiTro.ToLower() == "admin"))
+            {
+                context.VaiTros.Add(new VaiTro
+                {
+                    TenVaiTro = "Admin",
+                    MoTa = "Toàn quyền quản trị hệ thống"
+                });
+                coThayDoi = true;
+            }
+
+            if (!context.VaiTros.Any(x => x.TenVaiTro.ToLower() == "nhân viên" || x.TenVaiTro.ToLower() == "nhan vien"))
+            {
+                context.VaiTros.Add(new VaiTro
+                {
+                    TenVaiTro = "Nhân viên",
+                    MoTa = "Quyền thao tác nghiệp vụ cơ bản"
+                });
+                coThayDoi = true;
+            }
+
+            if (coThayDoi)
+            {
+                context.SaveChanges();
+            }
         }
 
         public VaiTro? LayTheoId(int vaiTroId)

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using QLKS.Data.Entities.Nhom_TaiKhoan;
 using QLKS.Data.QLKSDbContext;
 using QLKS.Enums;
+using QLKS.Services.Nhom_NhanVien;
 
 namespace QLKS.Services.Nhom_TaiKhoan
 {
@@ -17,6 +18,7 @@ namespace QLKS.Services.Nhom_TaiKhoan
 
         public List<TaiKhoan> LayDanhSach()
         {
+            KhoiTaoTaiKhoanMacDinhNeuCan();
             return context.TaiKhoans
                 .Include(x => x.NhanVien)
                     .ThenInclude(x => x.ChucVu)
@@ -27,6 +29,7 @@ namespace QLKS.Services.Nhom_TaiKhoan
 
         public List<TaiKhoan> LayDanhSachHoatDong()
         {
+            KhoiTaoTaiKhoanMacDinhNeuCan();
             return context.TaiKhoans
                 .Include(x => x.NhanVien)
                     .ThenInclude(x => x.ChucVu)
@@ -229,6 +232,8 @@ namespace QLKS.Services.Nhom_TaiKhoan
 
         public TaiKhoan? DangNhap(string tenDangNhap, string matKhau)
         {
+            KhoiTaoTaiKhoanMacDinhNeuCan();
+
             tenDangNhap = tenDangNhap?.Trim() ?? string.Empty;
             matKhau = matKhau?.Trim() ?? string.Empty;
 
@@ -265,6 +270,44 @@ namespace QLKS.Services.Nhom_TaiKhoan
 
             context.TaiKhoans.Remove(existing);
             return context.SaveChanges() > 0;
+        }
+
+        public void KhoiTaoTaiKhoanMacDinhNeuCan()
+        {
+            new VaiTroService().DamBaoVaiTroMacDinh();
+
+            if (context.TaiKhoans.Any())
+            {
+                return;
+            }
+
+            NhanVienService nhanVienService = new NhanVienService();
+            var nhanVienMacDinh = nhanVienService.LayDanhSachDangLam()
+                .OrderBy(x => x.NhanVienId)
+                .FirstOrDefault();
+
+            if (nhanVienMacDinh == null)
+            {
+                return;
+            }
+
+            int adminRoleId = context.VaiTros
+                .OrderBy(x => x.VaiTroId)
+                .First(x => x.TenVaiTro.ToLower() == "admin")
+                .VaiTroId;
+
+            TaiKhoan taiKhoanMacDinh = new TaiKhoan
+            {
+                TenDangNhap = "admin",
+                MatKhau = BCrypt.Net.BCrypt.HashPassword("123456", workFactor: BCryptWorkFactor),
+                NhanVienId = nhanVienMacDinh.NhanVienId,
+                VaiTroId = adminRoleId,
+                TrangThai = TrangThaiTaiKhoan.HoatDong,
+                GhiChu = "Tài khoản quản trị được tạo tự động cho lần sử dụng đầu tiên."
+            };
+
+            context.TaiKhoans.Add(taiKhoanMacDinh);
+            context.SaveChanges();
         }
     }
 }

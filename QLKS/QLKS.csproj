@@ -9,10 +9,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Forms\" />
     <Folder Include="Image\" />
     <Folder Include="Migrations\" />
-    <Folder Include="UserControls\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Forms\frmMain.Modules.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <EmbeddedResource Remove="Forms\frmMain.Modules.resx" />
+    <None Include="Forms\frmMain.Modules.resx" />
   </ItemGroup>
 
   <ItemGroup>

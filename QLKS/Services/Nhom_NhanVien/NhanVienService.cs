@@ -1,12 +1,17 @@
-﻿using QLKS.Data.Entities.Nhom_NhanVien;
+using Microsoft.EntityFrameworkCore;
+using QLKS.Data.Entities.Nhom_NhanVien;
+using QLKS.Data.Entities.Nhom_TaiKhoan;
 using QLKS.Data.QLKSDbContext;
 using QLKS.Enums;
-using Microsoft.EntityFrameworkCore;
+using QLKS.Services.Nhom_TaiKhoan;
+using System.Globalization;
+using System.Text;
 
 namespace QLKS.Services.Nhom_NhanVien
 {
     internal class NhanVienService
     {
+        private const int BCryptWorkFactor = 12;
         private readonly QLKSDbContext context;
 
         public NhanVienService()
@@ -26,6 +31,7 @@ namespace QLKS.Services.Nhom_NhanVien
         {
             return context.NhanViens
                 .Include(x => x.ChucVu)
+                .Include(x => x.TaiKhoan)
                 .Where(x => x.TrangThaiLamViec == TrangThaiLamViec.DangLam)
                 .OrderBy(x => x.MaNhanVien)
                 .ToList();
@@ -35,6 +41,7 @@ namespace QLKS.Services.Nhom_NhanVien
         {
             return context.NhanViens
                 .Include(x => x.ChucVu)
+                .Include(x => x.TaiKhoan)
                 .Where(x => x.TrangThaiLamViec == TrangThaiLamViec.DangLam)
                 .OrderBy(x => x.HoTen)
                 .ToList();
@@ -87,18 +94,23 @@ namespace QLKS.Services.Nhom_NhanVien
 
         public bool ThemNhanVien(NhanVien nhanVien)
         {
+            return ThemNhanVien(nhanVien, out _);
+        }
+
+        public bool ThemNhanVien(NhanVien nhanVien, out TaiKhoan? taiKhoanDuocTao)
+        {
+            taiKhoanDuocTao = null;
+
             if (nhanVien == null)
                 return false;
 
-            string maNhanVien = nhanVien.MaNhanVien?.Trim() ?? string.Empty;
             string hoTen = nhanVien.HoTen?.Trim() ?? string.Empty;
             string soDienThoai = nhanVien.SoDienThoai?.Trim() ?? string.Empty;
             string email = nhanVien.Email?.Trim() ?? string.Empty;
             string diaChi = nhanVien.DiaChi?.Trim() ?? string.Empty;
             string cccd = nhanVien.CCCD?.Trim() ?? string.Empty;
 
-            if (string.IsNullOrWhiteSpace(maNhanVien) ||
-                string.IsNullOrWhiteSpace(hoTen) ||
+            if (string.IsNullOrWhiteSpace(hoTen) ||
                 string.IsNullOrWhiteSpace(soDienThoai) ||
                 string.IsNullOrWhiteSpace(email) ||
                 string.IsNullOrWhiteSpace(diaChi) ||
@@ -114,16 +126,10 @@ namespace QLKS.Services.Nhom_NhanVien
                 return false;
             }
 
-            bool chucVuHopLe = context.ChucVus
-                .Any(x => x.ChucVuId == nhanVien.ChucVuId);
+            ChucVu? chucVu = context.ChucVus
+                .FirstOrDefault(x => x.ChucVuId == nhanVien.ChucVuId);
 
-            if (!chucVuHopLe)
-                return false;
-
-            bool trungMaNhanVien = context.NhanViens
-                .Any(x => x.MaNhanVien.ToLower() == maNhanVien.ToLower());
-
-            if (trungMaNhanVien)
+            if (chucVu == null)
                 return false;
 
             bool trungCccd = context.NhanViens
@@ -138,7 +144,8 @@ namespace QLKS.Services.Nhom_NhanVien
             if (trungEmail)
                 return false;
 
-            nhanVien.MaNhanVien = maNhanVien;
+            bool laNhanSuQuanTri = LaNhanSuQuanTri(chucVu.TenChucVu);
+            nhanVien.MaNhanVien = TaoMaNhanVienMoi(laNhanSuQuanTri ? "AD" : "NV");
             nhanVien.HoTen = hoTen;
             nhanVien.SoDienThoai = soDienThoai;
             nhanVien.Email = email;
@@ -148,8 +155,41 @@ namespace QLKS.Services.Nhom_NhanVien
                 ? null
                 : nhanVien.GhiChu.Trim();
 
-            context.NhanViens.Add(nhanVien);
-            return context.SaveChanges() > 0;
+            string tenDangNhap = nhanVien.MaNhanVien;
+            string matKhauMacDinh = TaoMatKhauMacDinh(nhanVien.NgaySinh);
+            int vaiTroId = LayVaiTroMacDinhId(laNhanSuQuanTri);
+
+            using var transaction = context.Database.BeginTransaction();
+
+            try
+            {
+                context.NhanViens.Add(nhanVien);
+                context.SaveChanges();
+
+                TaiKhoan taiKhoan = new TaiKhoan
+                {
+                    TenDangNhap = tenDangNhap,
+                    MatKhau = BCrypt.Net.BCrypt.HashPassword(matKhauMacDinh, workFactor: BCryptWorkFactor),
+                    NhanVienId = nhanVien.NhanVienId,
+                    VaiTroId = vaiTroId,
+                    TrangThai = nhanVien.TrangThaiLamViec == TrangThaiLamViec.DangLam
+                        ? TrangThaiTaiKhoan.HoatDong
+                        : TrangThaiTaiKhoan.TamKhoa,
+                    GhiChu = $"Tai khoan tu dong cho nhan vien {nhanVien.MaNhanVien}."
+                };
+
+                context.TaiKhoans.Add(taiKhoan);
+                context.SaveChanges();
+
+                transaction.Commit();
+                taiKhoanDuocTao = taiKhoan;
+                return true;
+            }
+            catch
+            {
+                transaction.Rollback();
+                return false;
+            }
         }
 
         public bool SuaNhanVien(NhanVien nhanVien)
@@ -277,6 +317,97 @@ namespace QLKS.Services.Nhom_NhanVien
 
             context.NhanViens.Remove(existing);
             return context.SaveChanges() > 0;
+        }
+
+        public static string TaoMatKhauMacDinh(DateTime ngaySinh)
+        {
+            return $"{ngaySinh:ddMMyyyy}nsnv";
+        }
+
+        private string TaoMaNhanVienMoi(string tienTo)
+        {
+            int soThuTuMoi = context.NhanViens
+                .Select(x => x.MaNhanVien)
+                .AsEnumerable()
+                .Concat(context.TaiKhoans.Select(x => x.TenDangNhap).AsEnumerable())
+                .Select(x => LaySoThuTu(x, tienTo))
+                .Where(x => x.HasValue)
+                .Select(x => x!.Value)
+                .DefaultIfEmpty(0)
+                .Max() + 1;
+
+            return $"{tienTo}{soThuTuMoi:000}";
+        }
+
+        private int LayVaiTroMacDinhId(bool laNhanSuQuanTri)
+        {
+            new VaiTroService().DamBaoVaiTroMacDinh();
+
+            string khoaVaiTro = laNhanSuQuanTri ? "admin" : "nhanvien";
+            VaiTro? vaiTro = context.VaiTros
+                .AsEnumerable()
+                .FirstOrDefault(x => ChuanHoaKhoaSoSanh(x.TenVaiTro) == khoaVaiTro);
+
+            if (vaiTro == null)
+            {
+                throw new InvalidOperationException("Khong tim thay vai tro mac dinh.");
+            }
+
+            return vaiTro.VaiTroId;
+        }
+
+        private static bool LaNhanSuQuanTri(string tenChucVu)
+        {
+            string khoa = ChuanHoaKhoaSoSanh(tenChucVu);
+
+            return khoa.Contains("admin") ||
+                   khoa.Contains("quanly") ||
+                   khoa.Contains("quantri") ||
+                   khoa.Contains("giamdoc");
+        }
+
+        private static int? LaySoThuTu(string? ma, string tienTo)
+        {
+            if (string.IsNullOrWhiteSpace(ma))
+            {
+                return null;
+            }
+
+            string giaTri = ma.Trim().ToUpperInvariant();
+            if (!giaTri.StartsWith(tienTo, StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            string phanSo = giaTri.Substring(tienTo.Length);
+            return int.TryParse(phanSo, out int soThuTu) ? soThuTu : null;
+        }
+
+        private static string ChuanHoaKhoaSoSanh(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            string normalized = value.Trim().Normalize(NormalizationForm.FormD);
+            StringBuilder builder = new StringBuilder(normalized.Length);
+
+            foreach (char c in normalized)
+            {
+                UnicodeCategory category = CharUnicodeInfo.GetUnicodeCategory(c);
+                if (category == UnicodeCategory.NonSpacingMark)
+                {
+                    continue;
+                }
+
+                if (char.IsLetterOrDigit(c))
+                {
+                    builder.Append(char.ToLowerInvariant(c));
+                }
+            }
+
+            return builder.ToString().Normalize(NormalizationForm.FormC);
         }
     }
 }
